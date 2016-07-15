@@ -3,7 +3,9 @@ var wdcw = window.wdcw || {},
 
 (function($, Q, tableau) {
   var retriesAttempted = 0,
-      maxRetries = 25,
+      defaultLimit = 60,
+      defaultOffset = 0,
+      maxRetries = 2,
       pokedex = {},
       wdc;
 
@@ -123,8 +125,8 @@ var wdcw = window.wdcw || {},
       getData: function getPokemonData(lastRecord) {
         var settings = {
           "url": "http://pokeapi.co/api/v2/pokemon/",
-          "limit": 60,
-          "offset": 0
+          "limit": defaultLimit,
+          "offset": defaultOffset
         };
 
         if (lastRecord) {
@@ -148,6 +150,7 @@ var wdcw = window.wdcw || {},
           var processedData = [],
               excludeList = [];
 
+          // Flattening the JSON data is expensive. Remove the properties we don't care about here.
           $.getJSON('/src/schema/pokemon.json', function (data) {
             if (data.hasOwnProperty('exclude')) {
               excludeList = data.exclude;
@@ -172,8 +175,8 @@ var wdcw = window.wdcw || {},
       getData: function getPokemonSpeciesData(lastRecord) {
         var settings = {
           "url": "http://pokeapi.co/api/v2/pokemon-species/",
-          "limit": 60,
-          "offset": 0
+          "limit": defaultLimit,
+          "offset": defaultOffset
         };
 
         if (lastRecord) {
@@ -191,12 +194,13 @@ var wdcw = window.wdcw || {},
        * @returns {Promise.<Array<any>>}
        */
       postProcess: function postProcessPokemonSpeciesData(rawData) {
-        tableau.log('Processing pokemon data');
+        tableau.log('Processing pokemon species data');
         
         return new Promise(function (resolve, reject) {
           var processedData = [],
             excludeList = [];
 
+          // Flattening the JSON data is expensive. Remove the properties we don't care about here.
           $.getJSON('/src/schema/pokemon_species.json', function (data) {
             if (data.hasOwnProperty('exclude')) {
               excludeList = data.exclude;
@@ -209,6 +213,7 @@ var wdcw = window.wdcw || {},
                 delete data[exclude];
               });
             }
+            console.log(data);
 
             processedData.push(util.flattenData(data));
           });
@@ -234,7 +239,7 @@ var wdcw = window.wdcw || {},
         tableau.log(reason);
 
         // Try and resolve.
-        resolve(processedData);
+        resolve(rawData);
       };
 
       getData(settings, function getNextData (data) {
@@ -243,7 +248,7 @@ var wdcw = window.wdcw || {},
         Promise.all(prefetchApiUrls(data.results)).then(function (items) {
           rawData = rawData.concat(items);
 
-          if (false) {
+          if (hasMoreData) {
             settings = { "url": data.next };
             getData(settings, getNextData, reject);
           }
@@ -299,10 +304,8 @@ var wdcw = window.wdcw || {},
         successCallback(response);
       },
       error: function (xhr, status, error) {
-        console.log(xhr.status);
-
         if (xhr.status === 429) {
-          console.log('retry');
+          tableau.log('Too many requests, wait a few minutes before the next one.');
           retryLater();
         }
         else {
