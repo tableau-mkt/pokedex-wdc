@@ -1,5 +1,5 @@
-# Pokdex-Web-Data-Connector
-A Tableau Web Data Connector for the Pokemon API
+# Pokedex-Web-Data-Connector
+A Tableau Web Data Connector for the Poke API (https://pokeapi.co/docsv2/#)
 
 ## Initial set-up
 - NPM dependencies
