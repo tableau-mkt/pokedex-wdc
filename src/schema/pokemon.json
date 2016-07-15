@@ -4,9 +4,19 @@
   "columns": [
     { "id": "id", "dataType": "string", "incrementalRefresh": true},
     { "id": "name", "dataType": "string" },
-    { "id": "generation_name", "alias": "generation", "dataType": "string" },
-    { "id": "names_0_name", "alias": "name", "dataType": "string" },
-    { "id": "effect_entries_0_effect", "alias": "effect_0", "dataType": "string" },
-    { "id": "effect_entries_0_short_effect", "alias": "short_effect_0", "dataType": "string" }
+    { "id": "is_default", "dataType": "bool" },
+    { "id": "base_experience", "dataType": "int" },
+    { "id": "height", "dataType": "int" },
+    { "id": "weight", "dataType": "string" },
+    { "id": "species_name", "dataType": "string" },
+    { "id": "sprites_front_default", "alias": "sprite", "dataType": "string" },
+    { "id": "types[0]type_name", "alias": "type_1", "dataType": "string" },
+    { "id": "types[1]type_name", "alias": "type_2", "dataType": "string" },
+    { "id": "stats[0]base_stat", "alias": "speed", "dataType": "string" },
+    { "id": "stats[1]base_stat", "alias": "special_defense", "dataType": "int" },
+    { "id": "stats[2]base_stat", "alias": "special_attack", "dataType": "int" },
+    { "id": "stats[3]base_stat", "alias": "defense", "dataType": "int" },
+    { "id": "stats[4]base_stat", "alias": "attack", "dataType": "int" },
+    { "id": "stats[5]base_stat", "alias": "hp", "dataType": "int" }
   ]
 }

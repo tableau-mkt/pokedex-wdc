@@ -120,6 +120,7 @@ module.exports = (function($, Q, tableau) {
       getData: function getPokemonData(lastRecord) {
         var settings = {
           "url": "http://pokeapi.co/api/v2/pokemon/",
+          "limit": 60,
           "offset": 0
         };
 
@@ -128,20 +129,30 @@ module.exports = (function($, Q, tableau) {
         }
 
         return new Promise(function (resolve, reject) {
-          getData(settings, function (data) {
-            var total = Number(data.count),
-                processedData = [];
-
-            Promise.all(prefetchApiUrls(data.results, total)).then(function (items) {
+          var processedData = [];
+          
+          getData(settings, function getNextData(data) {
+            var hasNext = data.next || false;
+            
+            Promise.all(prefetchApiUrls(data.results)).then(function (items) {
               items.forEach(function (item) {
                 processedData.push(util.flattenData(item));
               });
-
-              resolve(processedData);
+              
+              if (hasNext) {
+                settings.url = data.next;
+                getData(settings, getNextData, function reject(reason) {
+                  resolve(processedData);
+                });
+              }
+              else {
+                resolve(processedData);
+              }
             }, function reject(reason) {
-              tableau.abortWithError('Unable to fetch data: ' + reason);
-              resolve([]);
+              resolve(processedData);
             });
+          }, function reject(reason) {
+            resolve(processedData);
           });
         });
       },
@@ -154,7 +165,7 @@ module.exports = (function($, Q, tableau) {
        *
        * @returns {Promise.<Array<any>>}
        */
-      postProcess: function postProcessKeywordData(rawData) {
+      postProcess: function postProcessPokemon(rawData) {
         return Promise.resolve(rawData);
       }
     }
@@ -175,14 +186,12 @@ module.exports = (function($, Q, tableau) {
    *
    * @param {object} results
    *   List of API urls.
-   * @param {int} total
-   *   The total # of records to retrieve
    *
    * @returns {[]}
    *   An array of promise objects, set to resolve or reject after attempting to
    *   retrieve API data.
    */
-  function prefetchApiUrls(results, total) {
+  function prefetchApiUrls(results) {
     var promises = [],
         result = {},
         settings = {};
@@ -195,12 +204,13 @@ module.exports = (function($, Q, tableau) {
           settings = {
             "url": result.url
           };
-          
-          getData(settings, 0), function (data) {
+
+          getData(settings, function (data) {
+            console.log(data);
             resolve(data);
           }, function (reason) {
             reject(reason);
-          }
+          });
         }));
       }
     }
@@ -222,15 +232,19 @@ module.exports = (function($, Q, tableau) {
    *     reason: A string describing why data collection failed.
    */
   function getData(settings, successCallback, failCallback) {
-    var url = settings.url + "?limit=60";
-    
+    var url = settings.url + "?";
+
+    if (settings.hasOwnProperty("")) {
+      url = url + "limit=" + settings.limit + "&";
+    }
+
     if (settings.hasOwnProperty("offset")) {
-      url = settings.url + '&offset=' + settings.offset;
+      url = url + 'offset=' + settings.offset;
     }
     
     $.ajax({
       url: url,
-      method: "POST",
+      method: "GET",
       success: function (response) {
         successCallback(response);
       },

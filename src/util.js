@@ -52,8 +52,8 @@
 
       if (util.isArray(item)) {
         for (var i = 0; i < item.length; i++) {
-          parent = ancestor + key + '_' + i + '_';
-          flatten(item, parent, callback);
+          parent = ancestor + key + '[' + i + ']';
+          flatten(item[i], parent, callback);
         }
       }
       else if (typeof item === 'object') {
