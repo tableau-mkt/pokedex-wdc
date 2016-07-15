@@ -24,6 +24,7 @@ module.exports = function(grunt) {
           'bower_components/es6-promise/promise.js',
           'bower_components/jquery/dist/jquery.js',
           'bower_components/q/q.js',
+          'bower_components/qlimit/qlimit.js',
           'bower_components/uri.js/src/URI.min.js',
           'bower_components/tableau/dist/*.js',
           'bower_components/tether/dist/js/tether.js',

@@ -1,0 +1,22 @@
+{
+  "alias": "pokemonSpecies",
+  "id": "pokemon_species",
+  "columns": [
+    { "id": "id", "dataType": "string", "incrementalRefresh": true},
+    { "id": "name", "dataType": "string" },
+    { "id": "gender_rate", "dataType": "int", "description": "The chance of this Pokémon being female, in eighths; or -1 for genderless." },
+    { "id": "capture_rate", "dataType": "int", "description": "The base capture rate; up to 255. The higher the number, the easier the catch." },
+    { "id": "base_hapiness", "dataType": "int", "description": "The happiness when caught by a normal Pokéball; up to 255. The higher the number, the happier the Pokémon." },
+    { "id": "is_baby", "dataType": "bool" },
+    { "id": "hatch_counter", "dataType": "int", "description": "Initial hatch counter: one must walk 255 × (hatch_counter + 1) steps before this Pokémon's egg hatches, unless utilizing bonuses like Flame Body's." },
+    { "id": "has_gender_differences", "dataType": "bool", "description": "Whether or not this Pokémon can have different genders." },
+    { "id": "forms_switchable", "dataType": "bool", "description": "Whether or not this Pokémon has multiple forms and can switch between them." },
+    { "id": "growth_rateXname", "alias": "growth_rate", "dataType": "string" },
+    { "id": "colorXname", "alias": "color", "dataType": "string" },
+    { "id": "shapeXname", "alias": "shape", "dataType": "string" },
+    { "id": "evolves_from_speciesXname", "alias": "evolves_from_species", "dataType": "string" }
+  ],
+  "exclude": [
+    "form_descriptions", "flavor_text_entries", "names", "varieties"
+  ]
+}

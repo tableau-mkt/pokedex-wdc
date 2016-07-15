@@ -1,7 +1,10 @@
-var module = module || {};
+var wdcw = window.wdcw || {},
+    qlimit = window.qlimit || {};
 
-module.exports = (function($, Q, tableau) {
-  var pokedex = {},
+(function($, Q, tableau) {
+  var retriesAttempted = 0,
+      maxRetries = 25,
+      pokedex = {},
       wdc;
 
   pokedex.name = 'Pokedex WDC';
@@ -28,7 +31,6 @@ module.exports = (function($, Q, tableau) {
     switch (phase) {
       case tableau.phaseEnum.interactivePhase:
         // Perform actual interactive phase stuff.
-        setUpInteractivePhase();
         break;
 
       case tableau.phaseEnum.gatherDataPhase:
@@ -92,7 +94,8 @@ module.exports = (function($, Q, tableau) {
    */
   pokedex.schema = function defineSchema() {
     return Promise.all([
-      Q($.getJSON('/src/schema/pokemon.json'))
+      Q($.getJSON('/src/schema/pokemon.json')),
+      Q($.getJSON('/src/schema/pokemon_species.json'))
     ]);
   };
 
@@ -128,96 +131,129 @@ module.exports = (function($, Q, tableau) {
           settings.offset = Number(lastRecord) + 1;
         }
 
-        return new Promise(function (resolve, reject) {
-          var processedData = [];
-          
-          getData(settings, function getNextData(data) {
-            var hasNext = data.next || false;
-            
-            Promise.all(prefetchApiUrls(data.results)).then(function (items) {
-              items.forEach(function (item) {
-                processedData.push(util.flattenData(item));
-              });
-              
-              if (hasNext) {
-                settings.url = data.next;
-                getData(settings, getNextData, function reject(reason) {
-                  resolve(processedData);
-                });
-              }
-              else {
-                resolve(processedData);
-              }
-            }, function reject(reason) {
-              resolve(processedData);
-            });
-          }, function reject(reason) {
-            resolve(processedData);
-          });
-        });
+        return Promise.resolve(getAllData(settings));
       },
-
       /**
-       * Transform keyword data into the format expected for the keyword table.
+       * Transform pokemon data into the format expected for the pokemon table.
        *
        * @param {Object} rawData
-       *   Raw data returned from the keyword.getData method.
+       *   Raw data returned from the pokemon.getData method.
        *
        * @returns {Promise.<Array<any>>}
        */
-      postProcess: function postProcessPokemon(rawData) {
-        return Promise.resolve(rawData);
+      postProcess: function postProcessPokemonData(rawData) {
+        tableau.log('Processing pokemon data');
+        
+        return new Promise(function (resolve, reject) {
+          var processedData = [],
+              excludeList = [];
+
+          $.getJSON('/src/schema/pokemon.json', function (data) {
+            if (data.hasOwnProperty('exclude')) {
+              excludeList = data.exclude;
+            }
+          });
+
+          rawData.forEach(function (data) {
+            if (excludeList) {
+              excludeList.forEach(function (exclude) {
+                delete data[exclude];
+              });
+            }
+            
+            processedData.push(util.flattenData(data));
+          });
+          
+          resolve(processedData);
+        });
+      }
+    },
+    pokemon_species: {
+      getData: function getPokemonSpeciesData(lastRecord) {
+        var settings = {
+          "url": "http://pokeapi.co/api/v2/pokemon-species/",
+          "limit": 60,
+          "offset": 0
+        };
+
+        if (lastRecord) {
+          settings.offset = Number(lastRecord) + 1;
+        }
+
+        return Promise.resolve(getAllData(settings));
+      },
+      /**
+       * Transform pokemon species data into the format expected for the pokemon species table.
+       *
+       * @param {Object} rawData
+       *   Raw data returned from the pokemon_species.getData method.
+       *
+       * @returns {Promise.<Array<any>>}
+       */
+      postProcess: function postProcessPokemonSpeciesData(rawData) {
+        tableau.log('Processing pokemon data');
+        
+        return new Promise(function (resolve, reject) {
+          var processedData = [],
+            excludeList = [];
+
+          $.getJSON('/src/schema/pokemon_species.json', function (data) {
+            if (data.hasOwnProperty('exclude')) {
+              excludeList = data.exclude;
+            }
+          });
+
+          rawData.forEach(function (data) {
+            if (excludeList) {
+              excludeList.forEach(function (exclude) {
+                delete data[exclude];
+              });
+            }
+
+            processedData.push(util.flattenData(data));
+          });
+
+          resolve(processedData);
+        });
       }
     }
   };
 
   // You can write private methods for use above like this:
-
   /**
-   * Actual interactive phase setup code.
-   * Validation check to ensure WDC is not fired with invalid data
-   */
-  function setUpInteractivePhase() {
-
-  };
-
-  /**
-   * Helper function to return an array of promises
+   * Helper function to grab all the data for a specific set.
    *
-   * @param {object} results
-   *   List of API urls.
-   *
-   * @returns {[]}
-   *   An array of promise objects, set to resolve or reject after attempting to
-   *   retrieve API data.
+   * @param {Object} settings
+   *   The settings used for our API payload.
    */
-  function prefetchApiUrls(results) {
-    var promises = [],
-        result = {},
-        settings = {};
-    
-    for (var i = 0; i < results.length; i++) {
-      result = results[i];
-      
-      if (result.hasOwnProperty("url")) {
-        promises.push(new Promise(function (resolve, reject) {
-          settings = {
-            "url": result.url
-          };
+  function getAllData(settings) {
+    return new Promise(function (resolve, reject) {
+      var rawData = [];
 
-          getData(settings, function (data) {
-            console.log(data);
-            resolve(data);
-          }, function (reason) {
-            reject(reason);
-          });
-        }));
-      }
-    }
-    
-    return promises;
+      reject = function reject(reason) {
+        tableau.log(reason);
+
+        // Try and resolve.
+        resolve(processedData);
+      };
+
+      getData(settings, function getNextData (data) {
+        var hasMoreData = data.next || false;
+
+        Promise.all(prefetchApiUrls(data.results)).then(function (items) {
+          rawData = rawData.concat(items);
+
+          if (false) {
+            settings = { "url": data.next };
+            getData(settings, getNextData, reject);
+          }
+          else {
+            resolve(rawData);
+          }
+        }, reject);
+      }, reject);
+    });
   }
-
 
   /**
    * AJAX call to our API.
@@ -232,15 +268,29 @@ module.exports = (function($, Q, tableau) {
    *     reason: A string describing why data collection failed.
    */
   function getData(settings, successCallback, failCallback) {
-    var url = settings.url + "?";
+    var url = settings.url;
 
-    if (settings.hasOwnProperty("")) {
-      url = url + "limit=" + settings.limit + "&";
+    if (settings.hasOwnProperty('limit')) {
+      url = util.appendQueryParam(url, 'limit', settings.limit);
     }
 
-    if (settings.hasOwnProperty("offset")) {
-      url = url + 'offset=' + settings.offset;
+    if (settings.hasOwnProperty('offset')) {
+      url = util.appendQueryParam(url, 'offset', settings.offset);
     }
+
+    retryLater = function () {
+      if (retriesAttempted < maxRetries) {
+        retriesAttempted++;
+
+        // Wait up to 2 minutes before making another API call.
+        setTimeout(function(){
+          getData(settings, successCallback, failCallback);
+        }, 120000);
+      }
+      else {
+        failCallback('Too many requests, try an incremental refresh later.');
+      }
+    };
     
     $.ajax({
       url: url,
@@ -249,9 +299,54 @@ module.exports = (function($, Q, tableau) {
         successCallback(response);
       },
       error: function (xhr, status, error) {
-        failCallback('JSON fetch failed for ' + settings.url + '.');
+        console.log(xhr.status);
+
+        if (xhr.status === 429) {
+          console.log('retry');
+          retryLater();
+        }
+        else {
+          failCallback('JSON fetch failed for ' + settings.url + '.');
+        }
       }
     });
+  }
+  // getData = Q.limitConcurrency(getData, 1);
+
+  /**
+   * Helper function to return an array of promises
+   *
+   * @param {object} results
+   *   List of API urls.
+   *
+   * @returns {[]}
+   *   An array of promise objects, set to resolve or reject after attempting to
+   *   retrieve API data.
+   */
+  function prefetchApiUrls(results) {
+    var promises = [],
+      result = {},
+      settings = {};
+
+    for (var i = 0; i < results.length; i++) {
+      result = results[i];
+
+      if (result.hasOwnProperty('url')) {
+        promises.push(new Promise(function (resolve, reject) {
+          settings = {
+            'url': result.url
+          };
+
+          getData(settings, function (data) {
+            resolve(data);
+          }, function (reason) {
+            reject(reason);
+          });
+        }));
+      }
+    }
+
+    return promises;
   }
 
   // Polyfill for btoa() in older browsers.

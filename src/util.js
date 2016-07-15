@@ -23,6 +23,29 @@
   };
 
   /**
+   * Helper function to easily add/update a query parameter.
+   * 
+   * @param url
+   *  The url.
+   * @param key
+   *  The name of the query parameter.
+   * @param value
+   *  The value to be assigned to the query parameter.
+   * @returns {*}
+   */
+  util.appendQueryParam = function (url, key, value) {
+    var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i"),
+        separator = url.indexOf('?') !== -1 ? "&" : "?";
+    
+    if (url.match(re)) {
+      return url.replace(re, '$1' + key + "=" + value + '$2');
+    }
+    else {
+      return url + separator + key + "=" + value;
+    }
+  };
+
+  /**
    * Flattens our data into an object with unique property names.
    *
    * @param {object} obj
@@ -52,12 +75,12 @@
 
       if (util.isArray(item)) {
         for (var i = 0; i < item.length; i++) {
-          parent = ancestor + key + '[' + i + ']';
+          parent = ancestor + key + i;
           flatten(item[i], parent, callback);
         }
       }
       else if (typeof item === 'object') {
-        parent = ancestor + key + '_';
+        parent = ancestor + key + 'X';
         flatten(item, parent, callback);
 
         continue;
