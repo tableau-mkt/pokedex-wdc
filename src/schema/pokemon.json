@@ -1,0 +1,12 @@
+{
+  "alias": "pokemon",
+  "id": "pokemon",
+  "columns": [
+    { "id": "id", "dataType": "string", "incrementalRefresh": true},
+    { "id": "name", "dataType": "string" },
+    { "id": "generation_name", "alias": "generation", "dataType": "string" },
+    { "id": "names_0_name", "alias": "name", "dataType": "string" },
+    { "id": "effect_entries_0_effect", "alias": "effect_0", "dataType": "string" },
+    { "id": "effect_entries_0_short_effect", "alias": "short_effect_0", "dataType": "string" }
+  ]
+}
