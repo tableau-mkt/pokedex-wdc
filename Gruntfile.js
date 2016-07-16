@@ -31,7 +31,7 @@ module.exports = function(grunt) {
           'bower_components/wdcw/dist/wdcw.min.js',
           'src/**/*.js'
         ],
-        dest: 'build/all.js'
+        dest: 'build/js/all.js'
       }
     },
     uglify: {
@@ -41,8 +41,8 @@ module.exports = function(grunt) {
         sourceMap: true
       },
       target: {
-        src: 'build/all.js',
-        dest: 'build/all.min.js'
+        src: 'build/js/all.js',
+        dest: 'build/js/all.min.js'
       }
     },
     connect: {
