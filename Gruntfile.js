@@ -32,6 +32,12 @@ module.exports = function(grunt) {
           'src/**/*.js'
         ],
         dest: 'build/js/all.js'
+      },
+      css: {
+        src: [
+          'bower_components/bootstrap/dist/css/bootstrap.css'
+        ],
+        dest: 'build/css/style.css'
       }
     },
     uglify: {
@@ -45,10 +51,18 @@ module.exports = function(grunt) {
         dest: 'build/js/all.min.js'
       }
     },
+    cssmin: {
+      target: {
+        files: [{
+          src: 'build/css/style.css',
+          dest: 'build/css/style.min.css'
+        }]
+      }
+    },
     connect: {
       server: {
         options: {
-          base: './',
+          base: './build',
           port: 9001
         }
       }
@@ -67,6 +81,7 @@ module.exports = function(grunt) {
 
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
