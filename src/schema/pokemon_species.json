@@ -15,8 +15,5 @@
     { "id": "colorXname", "alias": "color", "dataType": "string" },
     { "id": "shapeXname", "alias": "shape", "dataType": "string" },
     { "id": "evolves_from_speciesXname", "alias": "evolves_from_species", "dataType": "string" }
-  ],
-  "exclude": [
-    "form_descriptions", "flavor_text_entries", "names", "varieties", "evolution_chain", "genera", "pal_park_encounters"
   ]
 }

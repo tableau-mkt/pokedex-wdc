@@ -18,8 +18,5 @@
     { "id": "stats3base_stat", "alias": "defense", "dataType": "int" },
     { "id": "stats4base_stat", "alias": "attack", "dataType": "int" },
     { "id": "stats5base_stat", "alias": "hp", "dataType": "int" }
-  ],
-  "exclude": [
-    "forms", "abilities", "moves", "held_items", "game_indices"
   ]
 }

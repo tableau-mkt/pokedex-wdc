@@ -1,16 +1,29 @@
-var wdcw = window.wdcw || {},
-    qlimit = window.qlimit || {};
+var wdcw = window.wdcw || {};
 
 (function($, Q, tableau) {
-  var retriesAttempted = 0,
+  var excludes,
+      retriesAttempted = 0,
+      totalRecords = 0,
       defaultLimit = 60,
       defaultOffset = 0,
-      maxRetries = 2,
+      maxRetries = 5,
+      maxLimit = 500,
       pokedex = {},
       wdc;
 
   pokedex.name = 'Pokedex WDC';
 
+  /**
+   * Flattening a JSON object is expensive. This list contains data properties
+   * which are not being used, and therefore should be excluded from the flattening process.
+   * 
+   * @type {{schema_name: string[property_name_1, property_name_2]}}
+   */
+  excludes = {
+    "pokemon": ["forms", "abilities", "moves", "held_items", "game_indices"],
+    "pokemon_species": ["form_descriptions", "flavor_text_entries", "names", "varieties", "evolution_chain", "genera", "pal_park_encounters"]
+  };
+  
   /**
    * Run during initialization of the web data connector.
    *
@@ -144,23 +157,15 @@ var wdcw = window.wdcw || {},
        * @returns {Promise.<Array<any>>}
        */
       postProcess: function postProcessPokemonData(rawData) {
-        tableau.log('Processing pokemon data');
+        console.log('Processing pokemon data');
         
         return new Promise(function (resolve, reject) {
-          var processedData = [],
-              excludeList = [];
-
-          // Flattening the JSON data is expensive. Remove the properties we don't care about here.
-          $.getJSON('/src/schema/pokemon.json', function (data) {
-            if (data.hasOwnProperty('exclude')) {
-              excludeList = data.exclude;
-            }
-          });
-
+          var processedData = [];
+          
           rawData.forEach(function (data) {
-            if (excludeList) {
-              excludeList.forEach(function (exclude) {
-                delete data[exclude];
+            if (excludes.hasOwnProperty('pokemon')) {
+              excludes.pokemon.forEach(function (name) {
+                data[name] = undefined;
               });
             }
             
@@ -194,30 +199,21 @@ var wdcw = window.wdcw || {},
        * @returns {Promise.<Array<any>>}
        */
       postProcess: function postProcessPokemonSpeciesData(rawData) {
-        tableau.log('Processing pokemon species data');
+        console.log('Processing pokemon species data');
         
         return new Promise(function (resolve, reject) {
-          var processedData = [],
-            excludeList = [];
-
-          // Flattening the JSON data is expensive. Remove the properties we don't care about here.
-          $.getJSON('/src/schema/pokemon_species.json', function (data) {
-            if (data.hasOwnProperty('exclude')) {
-              excludeList = data.exclude;
-            }
-          });
-
+          var processedData = [];
+  
           rawData.forEach(function (data) {
-            if (excludeList) {
-              excludeList.forEach(function (exclude) {
-                delete data[exclude];
+            if (excludes.hasOwnProperty('pokemon_species')) {
+              excludes.pokemon_species.forEach(function (name) {
+                data[name] = undefined;
               });
             }
-            console.log(data);
 
             processedData.push(util.flattenData(data));
           });
-
+  
           resolve(processedData);
         });
       }
@@ -236,19 +232,19 @@ var wdcw = window.wdcw || {},
       var rawData = [];
 
       reject = function reject(reason) {
-        tableau.log(reason);
-
         // Try and resolve.
         resolve(rawData);
       };
 
       getData(settings, function getNextData (data) {
-        var hasMoreData = data.next || false;
-
-        Promise.all(prefetchApiUrls(data.results)).then(function (items) {
+        var hasMoreData = data.next || false,
+            promises = prefetchApiUrls(data.results);
+        
+        Promise.all(promises).then(function (items) {
+          totalRecords = totalRecords + items.length;
           rawData = rawData.concat(items);
 
-          if (hasMoreData) {
+          if (hasMoreData && totalRecords < maxLimit) {
             settings = { "url": data.next };
             getData(settings, getNextData, reject);
           }
@@ -282,31 +278,29 @@ var wdcw = window.wdcw || {},
     if (settings.hasOwnProperty('offset')) {
       url = util.appendQueryParam(url, 'offset', settings.offset);
     }
-
-    retryLater = function () {
-      if (retriesAttempted < maxRetries) {
-        retriesAttempted++;
-
-        // Wait up to 2 minutes before making another API call.
-        setTimeout(function(){
-          getData(settings, successCallback, failCallback);
-        }, 120000);
-      }
-      else {
-        failCallback('Too many requests, try an incremental refresh later.');
-      }
-    };
     
     $.ajax({
       url: url,
       method: "GET",
       success: function (response) {
+        console.log('Got data for: ' + url);
         successCallback(response);
       },
       error: function (xhr, status, error) {
         if (xhr.status === 429) {
-          tableau.log('Too many requests, wait a few minutes before the next one.');
-          retryLater();
+          console.log('Too many requests, wait a few minutes before trying the next one.');
+          
+          if (retriesAttempted < maxRetries) {
+            retriesAttempted++;
+
+            // Wait up to 2 minutes before making another API call.
+            setTimeout(function(){
+              getData(settings, successCallback, failCallback);
+            }, 2000);
+          }
+          else {
+            failCallback('Too many requests, try an incremental refresh later.');
+          }
         }
         else {
           failCallback('JSON fetch failed for ' + settings.url + '.');
@@ -314,7 +308,6 @@ var wdcw = window.wdcw || {},
       }
     });
   }
-  // getData = Q.limitConcurrency(getData, 1);
 
   /**
    * Helper function to return an array of promises
@@ -327,15 +320,16 @@ var wdcw = window.wdcw || {},
    *   retrieve API data.
    */
   function prefetchApiUrls(results) {
-    var promises = [],
-      result = {},
-      settings = {};
+    var promise,
+        promises = [],
+        result = {},
+        settings = {};
 
     for (var i = 0; i < results.length; i++) {
       result = results[i];
 
       if (result.hasOwnProperty('url')) {
-        promises.push(new Promise(function (resolve, reject) {
+        promise = new Promise(function (resolve, reject) {
           settings = {
             'url': result.url
           };
@@ -345,7 +339,9 @@ var wdcw = window.wdcw || {},
           }, function (reason) {
             reject(reason);
           });
-        }));
+        });
+        
+        promises.push(promise);
       }
     }
 
