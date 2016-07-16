@@ -2,7 +2,7 @@
   "alias": "species",
   "id": "pokemon_species",
   "columns": [
-    { "id": "id", "dataType": "string", "description": "The identifier for this Pokémon species resource.", "incrementalRefresh": true},
+    { "id": "id", "dataType": "int", "description": "The identifier for this Pokémon species resource.", "incrementalRefresh": true},
     { "id": "name", "dataType": "string", "description": "The name for this Pokémon species resource." },
     { "id": "gender_rate", "dataType": "int", "description": "The chance of this Pokémon being female, in eighths; or -1 for genderless." },
     { "id": "capture_rate", "dataType": "int", "description": "The base capture rate; up to 255. The higher the number, the easier the catch." },

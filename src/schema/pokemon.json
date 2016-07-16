@@ -2,7 +2,7 @@
   "alias": "pokemon",
   "id": "pokemon",
   "columns": [
-    { "id": "id", "dataType": "string", "description": "The identifier for this Pokémon resource.", "incrementalRefresh": true},
+    { "id": "id", "dataType": "int", "description": "The identifier for this Pokémon resource.", "incrementalRefresh": true},
     { "id": "name", "dataType": "string", "description": "The name for this Pokémon resource." },
     { "id": "is_default", "dataType": "bool", "description": "Set for exactly one Pokémon used as the default for each species." },
     { "id": "base_experience", "dataType": "int", "description": "The base experience gained for defeating this Pokémon." },
