@@ -1,6 +1,4 @@
 node_modules
-build/css/style.css
-build/js/all.*
 npm-debug.log
 .DS_Store
 /*.env
