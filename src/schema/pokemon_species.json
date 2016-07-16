@@ -1,19 +1,20 @@
 {
-  "alias": "pokemonSpecies",
+  "alias": "species",
   "id": "pokemon_species",
   "columns": [
-    { "id": "id", "dataType": "string", "incrementalRefresh": true},
-    { "id": "name", "dataType": "string" },
+    { "id": "id", "dataType": "string", "description": "The identifier for this Pokémon species resource.", "incrementalRefresh": true},
+    { "id": "name", "dataType": "string", "description": "The name for this Pokémon species resource." },
     { "id": "gender_rate", "dataType": "int", "description": "The chance of this Pokémon being female, in eighths; or -1 for genderless." },
     { "id": "capture_rate", "dataType": "int", "description": "The base capture rate; up to 255. The higher the number, the easier the catch." },
     { "id": "base_hapiness", "dataType": "int", "description": "The happiness when caught by a normal Pokéball; up to 255. The higher the number, the happier the Pokémon." },
-    { "id": "is_baby", "dataType": "bool" },
+    { "id": "is_baby", "dataType": "bool", "description": "Whether or not this is a baby Pokémon." },
     { "id": "hatch_counter", "dataType": "int", "description": "Initial hatch counter: one must walk 255 × (hatch_counter + 1) steps before this Pokémon's egg hatches, unless utilizing bonuses like Flame Body's." },
     { "id": "has_gender_differences", "dataType": "bool", "description": "Whether or not this Pokémon can have different genders." },
     { "id": "forms_switchable", "dataType": "bool", "description": "Whether or not this Pokémon has multiple forms and can switch between them." },
-    { "id": "growth_rateXname", "alias": "growth_rate", "dataType": "string" },
-    { "id": "colorXname", "alias": "color", "dataType": "string" },
-    { "id": "shapeXname", "alias": "shape", "dataType": "string" },
-    { "id": "evolves_from_speciesXname", "alias": "evolves_from_species", "dataType": "string" }
+    { "id": "growth_rateXname", "alias": "growth_rate", "dataType": "string", "description": "The rate at which this Pokémon species gains levels." },
+    { "id": "colorXname", "alias": "color", "dataType": "string", "description": "The color of this Pokémon for gimmicky Pokédex search." },
+    { "id": "shapeXname", "alias": "shape", "dataType": "string", "description": "The shape of this Pokémon for gimmicky Pokédex search." },
+    { "id": "evolves_from_speciesXname", "alias": "evolves_from_species", "dataType": "string", "description": "The Pokémon species that evolves into this Pokemon_species." },
+    { "id": "generationXname", "alias": "generation", "dataType": "string", "description": "The generation this Pokémon species was introduced in." }
   ]
 }

@@ -7,7 +7,7 @@ var wdcw = window.wdcw || {};
       defaultLimit = 60,
       defaultOffset = 0,
       maxRetries = 5,
-      maxLimit = 500,
+      maxLimit = 5000,
       pokedex = {},
       wdc;
 
@@ -20,6 +20,7 @@ var wdcw = window.wdcw || {};
    * @type {{schema_name: string[property_name_1, property_name_2]}}
    */
   excludes = {
+    "games_generation": ["pokemon_species", "types", "version_groups", "names"],
     "pokemon": ["forms", "abilities", "moves", "held_items", "game_indices"],
     "pokemon_species": ["form_descriptions", "flavor_text_entries", "names", "varieties", "evolution_chain", "genera", "pal_park_encounters"]
   };
@@ -109,6 +110,7 @@ var wdcw = window.wdcw || {};
    */
   pokedex.schema = function defineSchema() {
     return Promise.all([
+      Q($.getJSON('/src/schema/games_generation.json')),
       Q($.getJSON('/src/schema/pokemon.json')),
       Q($.getJSON('/src/schema/pokemon_species.json'))
     ]);
@@ -134,6 +136,48 @@ var wdcw = window.wdcw || {};
    *   triggered.
    */
   pokedex.tables = {
+    games_generation: {
+      getData: function getPokemonData(lastRecord) {
+        var settings = {
+          "url": "http://pokeapi.co/api/v2/generation/",
+          "limit": defaultLimit,
+          "offset": defaultOffset
+        };
+
+        if (lastRecord) {
+          settings.offset = Number(lastRecord) + 1;
+        }
+
+        return Promise.resolve(getAllData(settings));
+      },
+      /**
+       * Transform games generation data into the format expected for the generation table.
+       *
+       * @param {Object} rawData
+       *   Raw data returned from the games_generation.getData method.
+       *
+       * @returns {Promise.<Array<any>>}
+       */
+      postProcess: function postProcessGamesGenerationData(rawData) {
+        console.log('Processing games generation data');
+
+        return new Promise(function (resolve, reject) {
+          var processedData = [];
+
+          rawData.forEach(function (data) {
+            if (excludes.hasOwnProperty('games_generation')) {
+              excludes.games_generation.forEach(function (name) {
+                data[name] = undefined;
+              });
+            }
+
+            processedData.push(util.flattenData(data));
+          });
+
+          resolve(processedData);
+        });
+      }
+    },
     pokemon: {
       getData: function getPokemonData(lastRecord) {
         var settings = {

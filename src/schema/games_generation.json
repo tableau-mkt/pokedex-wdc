@@ -1,0 +1,9 @@
+{
+  "alias": "generation",
+  "id": "games_generation",
+  "columns": [
+    { "id": "id", "dataType": "string", "description": "The identifier for this generation resource", "incrementalRefresh": true},
+    { "id": "name", "dataType": "string", "description": "The name for this generation resource." },
+    { "id": "main_regionXname", "dataType": "string", "description": "The main region travelled in this generation." }
+  ]
+}
