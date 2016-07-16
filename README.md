@@ -1,5 +1,8 @@
 # Pokedex-Web-Data-Connector
-A Tableau Web Data Connector for the Poke API (https://pokeapi.co/docsv2/#)
+A Tableau Web Data Connector built on top of the awesome Poke API: https://pokeapi.co
+
+## Live version
+https://pokedex-wdc.herokuapp.com/
 
 ## Initial set-up
 - NPM dependencies

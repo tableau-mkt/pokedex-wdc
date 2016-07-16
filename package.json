@@ -1,7 +1,7 @@
 {
   "name": "pokedex-wdc",
   "description": "Use Tableau to analyze Pokemon data.",
-  "homepage": "#",
+  "homepage": "https://pokedex-wdc.herokuapp.com/",
   "keywords": ["tableau-wdc", "pokemon", "pokedex"],
   "repository": {
     "type": "git",
