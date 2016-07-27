@@ -48,13 +48,28 @@ app.put('/cache/settings/:id', function (req, res) {
 
 // API endpoint to get data from the cache tables.
 app.get('/cache/data/:collection', function (req, res) {
-  var collection = req.params.collection;
-
-  pokemonCache.getData(collection,
+  var offset = parseInt(req.query.offset) || 0,
+      limit = parseInt(req.query.limit) || 60,
+      collection = req.params.collection,
+      next = null;
+  
+  pokemonCache.getData(collection, offset, limit,
     function (data) {
-      
+      pokemonCache.getCount(collection, function (count) {
+        if (offset < count) {
+          offset = offset + limit;
+          next = '/cache/data/' + collection + '?offset=' + offset + '&limit=' + limit;
+        }
 
-      res.send(data);
+        // Append extra info to the JSON array.
+        data.push({'next': next});
+
+        res.send(data);
+      }, 
+      function (err) {
+        handleError(res, err.message, "Failed to get count for " + collection);
+      }
+      );
     },
     function (err) {
       handleError(res, err.message, "Failed to get data from " + collection);

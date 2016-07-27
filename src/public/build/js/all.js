@@ -19367,7 +19367,7 @@ var Popover = (function ($) {
       totalRecords = 0,
       settings = {
         'maxRetries': 2,
-        'maxLimit': 180,
+        'maxLimit': 60,
         'limit': 60,
         'offset': {
           'generation': 0,
@@ -19387,7 +19387,7 @@ var Popover = (function ($) {
    * @type {{schema_name: string[property_name_1, property_name_2]}}
    */
   excludes = {
-    "generation": ["pokemon_species", "types", "version_groups", "names"],
+    "generation": ["pokemon_species", "abilities", "moves", "types", "version_groups", "names"],
     "pokemon": ["forms", "abilities", "moves", "held_items", "game_indices"],
     "pokemon-species": ["form_descriptions", "flavor_text_entries", "names", "varieties", "evolution_chain", "genera", "pal_park_encounters"]
   };
@@ -19566,8 +19566,6 @@ var Popover = (function ($) {
       postProcess: function postProcessGamesGenerationData(rawData) {
         var type = "generation";
         
-        console.log('Processing games generation data');
-
         return Promise.resolve(postProcessData(type, rawData));
       }
     },
@@ -19592,8 +19590,6 @@ var Popover = (function ($) {
       postProcess: function postProcessPokemonData(rawData) {
         var type = "pokemon";
         
-        console.log('Processing pokemon data');
-
         return Promise.resolve(postProcessData(type, rawData));
       }
     },
@@ -19618,8 +19614,6 @@ var Popover = (function ($) {
       postProcess: function postProcessPokemonSpeciesData(rawData) {
         var type = "pokemon-species";
         
-        console.log('Processing pokemon species data');
-
         return Promise.resolve(postProcessData(type, rawData));
       }
     }
@@ -19629,7 +19623,7 @@ var Popover = (function ($) {
   /**
    * Helper function to grab all the data for a specific set.
    *
-   * @param string type
+   * @param {string} type
    *   The type used for our API payload.
    */
   function getAllData(type) {
@@ -19669,10 +19663,12 @@ var Popover = (function ($) {
               else {
                 settings.offset[type] = current.id;
               }
-              
-              saveAllData('/cache/data/' + type, rawData).then(function () {
-                resolve(rawData);
-              });
+
+              processData(type, rawData).then(function (processedData) {
+                saveAllData('/cache/data/' + type, processedData).then(function () {
+                  resolve(processedData);
+                }, reject);
+              }, reject);
             }
             else {
               resolve(rawData);
@@ -19684,7 +19680,38 @@ var Popover = (function ($) {
   }
 
   /**
-   * AJAX call our API/cache.
+   * Get data from our cache.
+   *
+   * @param {string} type
+   *   The name of the collection.
+   * @returns {Promise}
+   */
+  function getCachedData(type) {
+    var cachedData = [],
+        promise,
+        url = '/cache/data/' + type;
+
+    promise = new Promise(function (resolve, reject) {
+      getData(url, function getNextData (data) {
+        var hasMoreData = data[data.length - 1].next || false;
+        
+        data.pop();
+        cachedData = cachedData.concat(data);
+
+        if (hasMoreData) {
+          getData(hasMoreData, getNextData, reject);
+        }
+        else {
+          resolve(cachedData)
+        }
+      }, reject);
+    });
+    
+    return Promise.resolve(promise);
+  }
+
+  /**
+   * AJAX API call.
    *
    * @param {string} url
    *   The url used for our API payload.
@@ -19727,6 +19754,47 @@ var Popover = (function ($) {
   }
 
   /**
+   * Flatten/Filter data.
+   * 
+   * @param type
+   * @param rawData
+   * @returns {Promise}
+   */
+  function processData(type, rawData) {
+    var promise,
+        processedData = [];
+    
+    promise = new Promise(function (resolve, reject) {
+      if (util.isArray(rawData)) {
+        for (var i = 0 ; i < rawData.length ; i++) {
+          if (excludes.hasOwnProperty(type)) {
+            excludes[type].forEach(function (name) {
+              rawData[i][name] = undefined;
+            });
+          }
+
+          processedData.push(util.flattenData(rawData[i]));
+        }
+      }
+      else {
+        rawData.forEach(function (record) {
+          if (excludes.hasOwnProperty(type)) {
+            excludes[type].forEach(function (name) {
+              record[name] = undefined;
+            });
+          }
+
+          processedData.push(util.flattenData(rawData));
+        });
+      }
+
+      resolve(processedData);
+    });
+    
+    return Promise.resolve(promise);
+  }
+    
+  /**
    * Helper function to post process the data to make it ready for Tableau.
    * 
    * @param type
@@ -19734,47 +19802,11 @@ var Popover = (function ($) {
    * @returns {Promise}
    */
   function postProcessData(type, rawData) {
-    var processData,
-        processedData = [],
-        getCachedData,
-        promise;
-
-    // Flatten data structure.
-    processData = function (data) {
-      promise = new Promise(function (resolve, reject) {
-        data.forEach(function (data) {
-          if (excludes.hasOwnProperty(type)) {
-            excludes[type].forEach(function (name) {
-              data[name] = undefined;
-            });
-          }
-
-          processedData.push(util.flattenData(data));
-        });
-
-        resolve(processedData);
-      });
-
-      return promise;
-    };
-
-    // Get our cached data.
-    getCachedData = function () {
-      promise = new Promise(function (resolve, reject) {
-        getData('/cache/data/' + type, function (result) {
-          resolve(result);
-        }, function (reason) {
-          reject(reason);
-        });
-      });
-      return promise;
-    };
-    
     if (caching) {
-      return getCachedData().then(processData);
+      return Promise.resolve(getCachedData(type));
     }
     else {
-      return Promise.resolve(processData);
+      return Promise.resolve(processData(type, rawData));
     }
   }
 

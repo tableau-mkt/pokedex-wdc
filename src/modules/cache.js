@@ -55,18 +55,44 @@ Cache.prototype.updateSettings = function (id, settings, successCallback, failCa
 /**
  *
  * @param collection
+ * @param offset
+ * @param limit
  * @param successCallback
  * @param failCallback
  */
-Cache.prototype.getData = function (collection, successCallback, failCallback) {
-  this.db.collection(collection).find({}, { _id: 0 }).toArray(function (err, result) {
-    if (err) {
-      failCallback(err);
+Cache.prototype.getData = function (collection, offset, limit, successCallback, failCallback) {
+  this.db.collection(collection)
+    .find({}, { _id: 0 })
+    .skip(offset)
+    .limit(limit)
+    .toArray(function (err, result) {
+      if (err) {
+        failCallback(err);
+      }
+      else {
+        successCallback(result);
+      }
     }
-    else {
-      successCallback(result);
+  );
+};
+
+/**
+ *
+ * @param collection
+ * @param successCallback
+ * @param failCallback
+ */
+Cache.prototype.getCount = function (collection, successCallback, failCallback) {
+  this.db.collection(collection)
+    .count(function (err, count) {
+      if (err) {
+        failCallback(err);
+      }
+      else {
+        successCallback(count);
+      }
     }
-  });
+  );
 };
 
 /**
