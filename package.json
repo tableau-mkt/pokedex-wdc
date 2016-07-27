@@ -13,7 +13,8 @@
   },
   "version": "0.1.0",
   "scripts": {
-    "start": "node /src/app.js"
+    "start": "node /src/app.js",
+    "postinstall": "grunt build"
   },
   "dependencies": {
     "body-parser": "^1.15.2",

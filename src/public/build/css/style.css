@@ -6300,6 +6300,8 @@ a:hover {
     height: 121px;
     margin: 20px auto;
     cursor: pointer;
+    animation: spin 1s infinite linear;
+    -webkit-animation: spin 1s infinite linear; /* Chrome, Safari, Opera */
 }
 
 .top{
@@ -6355,6 +6357,14 @@ a:hover {
     25%   {background: #db9090;}
     50%   {background: white;}
     75%  {background: #db9090;}
+}
+
+@keyframes spin {
+    0%  {transform: rotate(2deg);}
+    25%{transform: rotate(0deg);}
+    50%{transform: rotate(-5deg);}
+    75%{transform: rotate(0deg);}
+    100%{transform: rotate(2deg);}
 }
 
 /**
