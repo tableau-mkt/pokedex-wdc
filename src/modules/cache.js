@@ -4,8 +4,6 @@ function Cache (url) {
   var self = this;
   
   MongoClient.connect(url, function (err, db) {
-    console.log(err);
-    console.log(db);
     self.db = db;
   });
 }

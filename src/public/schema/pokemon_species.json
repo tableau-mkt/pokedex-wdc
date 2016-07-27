@@ -1,6 +1,6 @@
 {
   "alias": "species",
-  "id": "pokemon-species",
+  "id": "species",
   "columns": [
     { "id": "id", "dataType": "int", "description": "The identifier for this Pokémon species resource.", "incrementalRefresh": true},
     { "id": "name", "dataType": "string", "description": "The name for this Pokémon species resource." },

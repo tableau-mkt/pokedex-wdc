@@ -19361,7 +19361,7 @@ var Popover = (function ($) {
 
 (function($, Q, tableau) {
   var excludes,
-      baseUrl = "http://pokeapi.co/api/v2/",
+      baseUrl = "https://pokeapi.co/api/v2/",
       caching = true,
       retriesAttempted = 0,
       totalRecords = 0,
@@ -19597,9 +19597,9 @@ var Popover = (function ($) {
         return Promise.resolve(postProcessData(type, rawData));
       }
     },
-    "pokemon-species": {
+    "species": {
       getData: function getPokemonSpeciesData(lastRecord) {
-        var type = "species";
+        var type = "pokemon-species";
         
         if (lastRecord) {
           settings.offset[type] = Number(lastRecord) + 1;
@@ -19616,7 +19616,7 @@ var Popover = (function ($) {
        * @returns {Promise.<Array<any>>}
        */
       postProcess: function postProcessPokemonSpeciesData(rawData) {
-        var type = "species";
+        var type = "pokemon-species";
         
         console.log('Processing pokemon species data');
 
@@ -19720,7 +19720,6 @@ var Popover = (function ($) {
           }
         }
         else {
-          console.log(xhr);
           failCallback('JSON fetch failed for ' + url + '.');
         }
       }

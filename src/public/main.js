@@ -238,9 +238,9 @@ var wdcw = window.wdcw || {};
         return Promise.resolve(postProcessData(type, rawData));
       }
     },
-    "pokemon-species": {
+    "species": {
       getData: function getPokemonSpeciesData(lastRecord) {
-        var type = "species";
+        var type = "pokemon-species";
         
         if (lastRecord) {
           settings.offset[type] = Number(lastRecord) + 1;
@@ -257,7 +257,7 @@ var wdcw = window.wdcw || {};
        * @returns {Promise.<Array<any>>}
        */
       postProcess: function postProcessPokemonSpeciesData(rawData) {
-        var type = "species";
+        var type = "pokemon-species";
         
         console.log('Processing pokemon species data');
 
@@ -361,7 +361,6 @@ var wdcw = window.wdcw || {};
           }
         }
         else {
-          console.log(xhr);
           failCallback('JSON fetch failed for ' + url + '.');
         }
       }
