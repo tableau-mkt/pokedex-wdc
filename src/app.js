@@ -2,7 +2,7 @@ var express = require('express'),
     Cache = require('./modules/cache.js'),
     bodyParser = require("body-parser");
 
-var uri = process.env.MONGOLAB_URI || 'mongodb://127.0.0.1:27017/pokedex',
+var uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/pokedex',
     port = process.env.PORT || 3000,
     app = express(),
     pokemonCache = new Cache(uri);
