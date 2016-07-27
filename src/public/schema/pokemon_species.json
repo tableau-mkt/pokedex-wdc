@@ -2,8 +2,8 @@
   "alias": "species",
   "id": "species",
   "columns": [
-    { "id": "id", "dataType": "int", "description": "The identifier for this Pokémon species resource.", "incrementalRefresh": true},
-    { "id": "name", "dataType": "string", "description": "The name for this Pokémon species resource." },
+    { "id": "id", "alias": "species_id", "dataType": "int", "description": "The identifier for this Pokémon species resource.", "incrementalRefresh": true},
+    { "id": "name", "alias": "species_name", "dataType": "string", "description": "The name for this Pokémon species resource." },
     { "id": "gender_rate", "dataType": "int", "description": "The chance of this Pokémon being female, in eighths; or -1 for genderless." },
     { "id": "capture_rate", "dataType": "int", "description": "The base capture rate; up to 255. The higher the number, the easier the catch." },
     { "id": "base_hapiness", "dataType": "int", "description": "The happiness when caught by a normal Pokéball; up to 255. The higher the number, the happier the Pokémon." },
@@ -15,6 +15,6 @@
     { "id": "colorXname", "alias": "color", "dataType": "string", "description": "The color of this Pokémon for gimmicky Pokédex search." },
     { "id": "shapeXname", "alias": "shape", "dataType": "string", "description": "The shape of this Pokémon for gimmicky Pokédex search." },
     { "id": "evolves_from_speciesXname", "alias": "evolves_from_species", "dataType": "string", "description": "The Pokémon species that evolves into this Pokemon_species." },
-    { "id": "generationXname", "alias": "generation", "dataType": "string", "description": "The generation this Pokémon species was introduced in." }
+    { "id": "generationXname", "alias": "generation_name", "dataType": "string", "description": "The generation this Pokémon species was introduced in." }
   ]
 }

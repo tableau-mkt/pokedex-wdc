@@ -8,7 +8,7 @@ var wdcw = window.wdcw || {};
       totalRecords = 0,
       settings = {
         'maxRetries': 2,
-        'maxLimit': 180,
+        'maxLimit': 60,
         'limit': 60,
         'offset': {
           'generation': 0,
