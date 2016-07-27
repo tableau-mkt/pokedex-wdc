@@ -1,6 +1,6 @@
 {
   "alias": "generation",
-  "id": "games_generation",
+  "id": "generation",
   "columns": [
     { "id": "id", "dataType": "int", "description": "The identifier for this generation resource", "incrementalRefresh": true},
     { "id": "name", "dataType": "string", "description": "The name for this generation resource." },
