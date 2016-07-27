@@ -19296,16 +19296,85 @@ var Popover = (function ($) {
 
 }(jQuery);
 ;/*! wdcw.2.0.0-beta.1.6:14:58 2016-06-12 */
-!function(a){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=a();else if("function"==typeof define&&define.amd)define([],a);else{var b;b="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:this,b.wdcw=a()}}(function(){return function a(b,c,d){function e(g,h){if(!c[g]){if(!b[g]){var i="function"==typeof require&&require;if(!h&&i)return i(g,!0);if(f)return f(g,!0);var j=new Error("Cannot find module '"+g+"'");throw j.code="MODULE_NOT_FOUND",j}var k=c[g]={exports:{}};b[g][0].call(k.exports,function(a){var c=b[g][1][a];return e(c?c:a)},k,k.exports,a,b,c,d)}return c[g].exports}for(var f="function"==typeof require&&require,g=0;g<d.length;g++)e(d[g]);return e}({1:[function(a,b,c){function d(a){e=a,f=this,this.semaphore={}}c=b.exports=d;var e,f;d.prototype.registerDataRetrieval=function(a,b){return f.semaphore[a]=b,b},d.prototype.waitForData=function(a){if(!f.semaphore.hasOwnProperty(a))throw"Could not find data gathering semaphore for table: "+a;return f.semaphore[a]},d.prototype.getConnectionData=function(a){var b=e.connectionData?JSON.parse(e.connectionData):{};return a?b.hasOwnProperty(a)?b[a]:"":b},d.prototype.setConnectionData=function(a){return e.connectionData=JSON.stringify(a),a},d.getUsername=function(){return e.username},d.prototype.setUsername=function(a){return e.username=a,e.username},d.prototype.getPassword=function(){return e.password},d.prototype.setPassword=function(a){return e.password=a,e.password},d.prototype.ajaxErrorHandler=function(a,b,c){var d='There was a problem retrieving data: "'+b+'" with error thrown: "'+c+'"';e.abortWithError(d)},d.prototype.promiseErrorHandler=function(a){"string"==typeof a?e.abortWithError(a):e.abortWithError(JSON.stringify(a))},d.prototype.getAuthPurpose=function(){return e.authPurpose}},{}],2:[function(a,b,c){c=b.exports=function(a,b,c,d){return function(){d("form").submit(function(e){var f=d("input, select, textarea").not('[type="password"],[type="submit"],[name="username"]'),g=d('input[type="password"]'),h=d('input[name="username"]'),i={};return e.preventDefault(),f.map(function(){var a=d(this);return name=a.attr("name"),name&&(a.is(":checkbox")?i[name]=a.is(":checked"):i[name]=a.val()),this}),f.length&&i==={}?!1:(a.setConnectionData(i),c.connectionName=b.name,g.length&&a.setPassword(g.val()),h.length&&a.setUsername(h.val()),void c.submit())})}}},{}],3:[function(a,b,c){c=b.exports=function(a,b,c,d){return function(e,f){var g,h,i=e.tableInfo.id,j=e.tableInfo.dependsOn;if(!b.tables.hasOwnProperty(i)||"function"!=typeof b.tables[i].getData)return c.abortWithError("Data callback missing for table: "+i),f();if(g=b.tables[i].hasOwnProperty("postProcess")&&"function"==typeof b.tables[i].postProcess?b.tables[i].postProcess:function(a){return d.resolve(a)},j)try{h=d.all(j.map(a.waitForData))}catch(k){return c.abortWithError("Attempted to gather dependent table data before its requisites. Make sure your table definitions are in order."),c.abortWithError(k),f()}else h=d.resolve();h.then(function(c){return a.registerDataRetrieval(i,b.tables[i].getData.call(a,e.incrementValue,c,e.appendRows))},a.promiseErrorHandler).then(g,a.promiseErrorHandler).then(function(a){e.appendRows(a||[]),f()},a.promiseErrorHandler)["catch"](a.promiseErrorHandler)}}},{}],4:[function(a,b,c){c=b.exports=function(a,b){return function(c){b.schema.call(a).then(c,a.promiseErrorHandler)["catch"](a.promiseErrorHandler)}}},{}],5:[function(a,b,c){c=b.exports=function(a,b,c,d){function e(){return Promise.resolve()}return function(f){var g,h,i=this.getConnectionData(),j=b.hasOwnProperty("setup")?b.setup:e;if(b.authType&&(d.authType=b.authType),d.phase===d.phaseEnum.interactivePhase){for(h in i)i.hasOwnProperty(h)&&(g=c('*[name="'+h+'"]'),g.length&&(g.is(":checkbox")?g.attr("checked",!!i[h]).change():g.val(i[h]).change()));d.username&&c('input[name="username"]').val(d.username),d.password&&c('input[type="password"]').val(d.password)}j.call(a,d.phase).then(f,a.promiseErrorHandler)["catch"](a.promiseErrorHandler)}}},{}],6:[function(a,b,c){c=b.exports=function(a,b){function c(){return Promise.resolve()}return function(d){var e=b.hasOwnProperty("teardown")?b.teardown:c;e.call(a,tableau.phase).then(d,a.promiseErrorHandler)["catch"](a.promiseErrorHandler)}}},{}],wdcw:[function(a,b,c){(function(d){function e(b){var c=new i(h);b=b||{tables:{}},this.config=b,c.init=a("./connector/init")(c,b,f,h),c.shutdown=a("./connector/shutdown")(c,b),c.getSchema=a("./connector/getSchema")(c,b),c.getData=a("./connector/getData")(c,b,h,g),f(a("./connector/domReady")(c,b,h,f)),h.registerConnector(c),this.getConnector=function(){return c}}c=b.exports=e;var f="undefined"!=typeof window?window.jQuery:"undefined"!=typeof d?d.jQuery:null,g="undefined"!=typeof window?window.Promise:"undefined"!=typeof d?d.Promise:null,h="undefined"!=typeof window?window.tableau:"undefined"!=typeof d?d.tableau:null,i=a("./Connector");e.prototype.registerSetup=function(a){return this.config.setup=a,this},e.prototype.registerTeardown=function(a){return this.config.teardown=a,this},e.prototype.registerSchema=function(a){return this.config.schema=a,this},e.prototype.registerData=function(a,b){return this.config.tables.hasOwnProperty(a)||(this.config.tables[a]={}),this.config.tables[a].getData=b,this},e.prototype.registerPostProcess=function(a,b){return this.config.tables.hasOwnProperty(a)||(this.config.tables[a]={}),this.config.tables[a].postProcess=b,this}}).call(this,"undefined"!=typeof global?global:"undefined"!=typeof self?self:"undefined"!=typeof window?window:{})},{"./Connector":1,"./connector/domReady":2,"./connector/getData":3,"./connector/getSchema":4,"./connector/init":5,"./connector/shutdown":6}]},{},["wdcw"])("wdcw")});;var wdcw = window.wdcw || {};
+!function(a){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=a();else if("function"==typeof define&&define.amd)define([],a);else{var b;b="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:this,b.wdcw=a()}}(function(){return function a(b,c,d){function e(g,h){if(!c[g]){if(!b[g]){var i="function"==typeof require&&require;if(!h&&i)return i(g,!0);if(f)return f(g,!0);var j=new Error("Cannot find module '"+g+"'");throw j.code="MODULE_NOT_FOUND",j}var k=c[g]={exports:{}};b[g][0].call(k.exports,function(a){var c=b[g][1][a];return e(c?c:a)},k,k.exports,a,b,c,d)}return c[g].exports}for(var f="function"==typeof require&&require,g=0;g<d.length;g++)e(d[g]);return e}({1:[function(a,b,c){function d(a){e=a,f=this,this.semaphore={}}c=b.exports=d;var e,f;d.prototype.registerDataRetrieval=function(a,b){return f.semaphore[a]=b,b},d.prototype.waitForData=function(a){if(!f.semaphore.hasOwnProperty(a))throw"Could not find data gathering semaphore for table: "+a;return f.semaphore[a]},d.prototype.getConnectionData=function(a){var b=e.connectionData?JSON.parse(e.connectionData):{};return a?b.hasOwnProperty(a)?b[a]:"":b},d.prototype.setConnectionData=function(a){return e.connectionData=JSON.stringify(a),a},d.getUsername=function(){return e.username},d.prototype.setUsername=function(a){return e.username=a,e.username},d.prototype.getPassword=function(){return e.password},d.prototype.setPassword=function(a){return e.password=a,e.password},d.prototype.ajaxErrorHandler=function(a,b,c){var d='There was a problem retrieving data: "'+b+'" with error thrown: "'+c+'"';e.abortWithError(d)},d.prototype.promiseErrorHandler=function(a){"string"==typeof a?e.abortWithError(a):e.abortWithError(JSON.stringify(a))},d.prototype.getAuthPurpose=function(){return e.authPurpose}},{}],2:[function(a,b,c){c=b.exports=function(a,b,c,d){return function(){d("form").submit(function(e){var f=d("input, select, textarea").not('[type="password"],[type="submit"],[name="username"]'),g=d('input[type="password"]'),h=d('input[name="username"]'),i={};return e.preventDefault(),f.map(function(){var a=d(this);return name=a.attr("name"),name&&(a.is(":checkbox")?i[name]=a.is(":checked"):i[name]=a.val()),this}),f.length&&i==={}?!1:(a.setConnectionData(i),c.connectionName=b.name,g.length&&a.setPassword(g.val()),h.length&&a.setUsername(h.val()),void c.submit())})}}},{}],3:[function(a,b,c){c=b.exports=function(a,b,c,d){return function(e,f){var g,h,i=e.tableInfo.id,j=e.tableInfo.dependsOn;if(!b.tables.hasOwnProperty(i)||"function"!=typeof b.tables[i].getData)return c.abortWithError("Data callback missing for table: "+i),f();if(g=b.tables[i].hasOwnProperty("postProcess")&&"function"==typeof b.tables[i].postProcess?b.tables[i].postProcess:function(a){return d.resolve(a)},j)try{h=d.all(j.map(a.waitForData))}catch(k){return c.abortWithError("Attempted to gather dependent table data before its requisites. Make sure your table definitions are in order."),c.abortWithError(k),f()}else h=d.resolve();h.then(function(c){return a.registerDataRetrieval(i,b.tables[i].getData.call(a,e.incrementValue,c,e.appendRows))},a.promiseErrorHandler).then(g,a.promiseErrorHandler).then(function(a){e.appendRows(a||[]),f()},a.promiseErrorHandler)["catch"](a.promiseErrorHandler)}}},{}],4:[function(a,b,c){c=b.exports=function(a,b){return function(c){b.schema.call(a).then(c,a.promiseErrorHandler)["catch"](a.promiseErrorHandler)}}},{}],5:[function(a,b,c){c=b.exports=function(a,b,c,d){function e(){return Promise.resolve()}return function(f){var g,h,i=this.getConnectionData(),j=b.hasOwnProperty("setup")?b.setup:e;if(b.authType&&(d.authType=b.authType),d.phase===d.phaseEnum.interactivePhase){for(h in i)i.hasOwnProperty(h)&&(g=c('*[name="'+h+'"]'),g.length&&(g.is(":checkbox")?g.attr("checked",!!i[h]).change():g.val(i[h]).change()));d.username&&c('input[name="username"]').val(d.username),d.password&&c('input[type="password"]').val(d.password)}j.call(a,d.phase).then(f,a.promiseErrorHandler)["catch"](a.promiseErrorHandler)}}},{}],6:[function(a,b,c){c=b.exports=function(a,b){function c(){return Promise.resolve()}return function(d){var e=b.hasOwnProperty("teardown")?b.teardown:c;e.call(a,tableau.phase).then(d,a.promiseErrorHandler)["catch"](a.promiseErrorHandler)}}},{}],wdcw:[function(a,b,c){(function(d){function e(b){var c=new i(h);b=b||{tables:{}},this.config=b,c.init=a("./connector/init")(c,b,f,h),c.shutdown=a("./connector/shutdown")(c,b),c.getSchema=a("./connector/getSchema")(c,b),c.getData=a("./connector/getData")(c,b,h,g),f(a("./connector/domReady")(c,b,h,f)),h.registerConnector(c),this.getConnector=function(){return c}}c=b.exports=e;var f="undefined"!=typeof window?window.jQuery:"undefined"!=typeof d?d.jQuery:null,g="undefined"!=typeof window?window.Promise:"undefined"!=typeof d?d.Promise:null,h="undefined"!=typeof window?window.tableau:"undefined"!=typeof d?d.tableau:null,i=a("./Connector");e.prototype.registerSetup=function(a){return this.config.setup=a,this},e.prototype.registerTeardown=function(a){return this.config.teardown=a,this},e.prototype.registerSchema=function(a){return this.config.schema=a,this},e.prototype.registerData=function(a,b){return this.config.tables.hasOwnProperty(a)||(this.config.tables[a]={}),this.config.tables[a].getData=b,this},e.prototype.registerPostProcess=function(a,b){return this.config.tables.hasOwnProperty(a)||(this.config.tables[a]={}),this.config.tables[a].postProcess=b,this}}).call(this,"undefined"!=typeof global?global:"undefined"!=typeof self?self:"undefined"!=typeof window?window:{})},{"./Connector":1,"./connector/domReady":2,"./connector/getData":3,"./connector/getSchema":4,"./connector/init":5,"./connector/shutdown":6}]},{},["wdcw"])("wdcw")});;(function($) {
+  var typing = false,
+      line = 0,
+      speed = 80,
+      lines = [["This is a web data connector for Tableau."],
+        ["Want to start analyzing pokemon data?"],
+        ["Click the big pokeball below."],
+        ["Go ahead, and catch' em all!"]];
+  
+  $(document).ready(function() {
+    // Initial text.
+    type(lines[line] + "");
+  });
+
+  $(".box").click(function (e) {
+    if (line < lines.length) {
+      type(lines[line] + "");
+    }
+    else {
+      $(".box").addClass("hide");
+    }
+  });
+
+  $('.pokeball').click(function (e) {
+    $('#submit').click();
+  });
+
+  // Type text in dialogue box.
+  function type(text) {
+    var timeout,
+        char = 0,
+        charType;
+
+    if (!typing) {
+      typing = true;
+      line++;
+
+      $(".box").text("");
+
+      (function typeText() {
+        timeout = setTimeout(function () {
+          // Move on to the next char.
+          char++;
+          charType = text.substring(0, char);
+
+          $(".box").html(charType.replace("\n", "<br />"));
+
+          typeText();
+          if (char == text.length) {
+            clearTimeout(timeout)
+
+            typing = false;
+            if (line < lines.length) {
+              $(".box").prepend("<i></i>");
+            }
+          }
+        }, speed);
+      })();
+    }
+  }
+})(jQuery);
+;var wdcw = window.wdcw || {};
 
 (function($, Q, tableau) {
   var excludes,
+      baseUrl = "http://pokeapi.co/api/v2/",
+      caching = true,
       retriesAttempted = 0,
       totalRecords = 0,
-      defaultLimit = 60,
-      defaultOffset = 0,
-      maxRetries = 5,
-      maxLimit = 5000,
+      settings = {
+        'maxRetries': 2,
+        'maxLimit': 180,
+        'limit': 60,
+        'offset': {
+          'generation': 0,
+          'pokemon': 0,
+          'pokemon-species': 0
+        }
+      },
       pokedex = {},
       wdc;
 
@@ -19318,9 +19387,9 @@ var Popover = (function ($) {
    * @type {{schema_name: string[property_name_1, property_name_2]}}
    */
   excludes = {
-    "games_generation": ["pokemon_species", "types", "version_groups", "names"],
+    "generation": ["pokemon_species", "types", "version_groups", "names"],
     "pokemon": ["forms", "abilities", "moves", "held_items", "game_indices"],
-    "pokemon_species": ["form_descriptions", "flavor_text_entries", "names", "varieties", "evolution_chain", "genera", "pal_park_encounters"]
+    "pokemon-species": ["form_descriptions", "flavor_text_entries", "names", "varieties", "evolution_chain", "genera", "pal_park_encounters"]
   };
   
   /**
@@ -19343,6 +19412,7 @@ var Popover = (function ($) {
    */
   pokedex.setup = function setup(phase) {
     switch (phase) {
+      
       case tableau.phaseEnum.interactivePhase:
         // Perform actual interactive phase stuff.
         break;
@@ -19351,6 +19421,31 @@ var Popover = (function ($) {
         // Perform set up tasks that should happen when Tableau is attempting to
         // retrieve data from your connector (the user is not prompted for any
         // information in this phase.
+
+        // If caching is enabled, grab the default settings.
+        if (caching) {
+          return new Promise(function(resolve, reject) {
+            getData('/cache/settings', 
+              function (result) {
+                if (typeof(result[0]) === 'object' && result[0].hasOwnProperty('settings')) {
+                  result = result[0].settings;
+                }
+
+                // Update the offset variables.
+                for (var name in result) {
+                  if (result.hasOwnProperty(name)) {
+                    settings.offset[name] = result[name];
+                  }
+                }
+                
+                resolve(Promise.resolve());
+              },
+              function (err) {
+                console.log(err);
+              }
+            );
+          });
+        }
         break;
 
       case tableau.phaseEnum.authPhase:
@@ -19377,6 +19472,21 @@ var Popover = (function ($) {
   pokedex.teardown = function teardown() {
     // Once shutdown tasks are complete, call this. Particularly useful if your
     // clean-up tasks are asynchronous in nature.
+
+    // If caching is enabled, save our settings.
+    if (caching) {
+      return new Promise(function(resolve, reject) {
+        saveData('/cache/settings/1', settings.offset,
+          function (result) {
+            resolve(Promise.resolve());
+          },
+          function (err) {
+            console.log(err);
+          }
+        );
+      });
+    }
+    
     return Promise.resolve();
   };
 
@@ -19408,9 +19518,9 @@ var Popover = (function ($) {
    */
   pokedex.schema = function defineSchema() {
     return Promise.all([
-      Q($.getJSON('/src/schema/games_generation.json')),
-      Q($.getJSON('/src/schema/pokemon.json')),
-      Q($.getJSON('/src/schema/pokemon_species.json'))
+      Q($.getJSON('/schema/generation.json')),
+      Q($.getJSON('/schema/pokemon.json')),
+      Q($.getJSON('/schema/pokemon_species.json'))
     ]);
   };
 
@@ -19434,19 +19544,16 @@ var Popover = (function ($) {
    *   triggered.
    */
   pokedex.tables = {
-    games_generation: {
+    generation: {
       getData: function getPokemonData(lastRecord) {
-        var settings = {
-          "url": "http://pokeapi.co/api/v2/generation/",
-          "limit": defaultLimit,
-          "offset": defaultOffset
-        };
-
+        var type = "generation";
+        
+        // Support incremental refreshing.
         if (lastRecord) {
-          settings.offset = Number(lastRecord) + 1;
+          settings.offset[type] = Number(lastRecord) + 1;
         }
 
-        return Promise.resolve(getAllData(settings));
+        return Promise.resolve(getAllData(type));
       },
       /**
        * Transform games generation data into the format expected for the generation table.
@@ -19457,38 +19564,22 @@ var Popover = (function ($) {
        * @returns {Promise.<Array<any>>}
        */
       postProcess: function postProcessGamesGenerationData(rawData) {
+        var type = "generation";
+        
         console.log('Processing games generation data');
 
-        return new Promise(function (resolve, reject) {
-          var processedData = [];
-
-          rawData.forEach(function (data) {
-            if (excludes.hasOwnProperty('games_generation')) {
-              excludes.games_generation.forEach(function (name) {
-                data[name] = undefined;
-              });
-            }
-
-            processedData.push(util.flattenData(data));
-          });
-
-          resolve(processedData);
-        });
+        return Promise.resolve(postProcessData(type, rawData));
       }
     },
     pokemon: {
       getData: function getPokemonData(lastRecord) {
-        var settings = {
-          "url": "http://pokeapi.co/api/v2/pokemon/",
-          "limit": defaultLimit,
-          "offset": defaultOffset
-        };
-
+        var type = "pokemon";
+        
         if (lastRecord) {
-          settings.offset = Number(lastRecord) + 1;
+          settings.offset[type] = Number(lastRecord) + 1;
         }
 
-        return Promise.resolve(getAllData(settings));
+        return Promise.resolve(getAllData(type));
       },
       /**
        * Transform pokemon data into the format expected for the pokemon table.
@@ -19499,38 +19590,22 @@ var Popover = (function ($) {
        * @returns {Promise.<Array<any>>}
        */
       postProcess: function postProcessPokemonData(rawData) {
-        console.log('Processing pokemon data');
+        var type = "pokemon";
         
-        return new Promise(function (resolve, reject) {
-          var processedData = [];
-          
-          rawData.forEach(function (data) {
-            if (excludes.hasOwnProperty('pokemon')) {
-              excludes.pokemon.forEach(function (name) {
-                data[name] = undefined;
-              });
-            }
-            
-            processedData.push(util.flattenData(data));
-          });
-          
-          resolve(processedData);
-        });
+        console.log('Processing pokemon data');
+
+        return Promise.resolve(postProcessData(type, rawData));
       }
     },
-    pokemon_species: {
+    "pokemon-species": {
       getData: function getPokemonSpeciesData(lastRecord) {
-        var settings = {
-          "url": "http://pokeapi.co/api/v2/pokemon-species/",
-          "limit": defaultLimit,
-          "offset": defaultOffset
-        };
-
+        var type = "species";
+        
         if (lastRecord) {
-          settings.offset = Number(lastRecord) + 1;
+          settings.offset[type] = Number(lastRecord) + 1;
         }
 
-        return Promise.resolve(getAllData(settings));
+        return Promise.resolve(getAllData(type));
       },
       /**
        * Transform pokemon species data into the format expected for the pokemon species table.
@@ -19541,23 +19616,11 @@ var Popover = (function ($) {
        * @returns {Promise.<Array<any>>}
        */
       postProcess: function postProcessPokemonSpeciesData(rawData) {
-        console.log('Processing pokemon species data');
+        var type = "species";
         
-        return new Promise(function (resolve, reject) {
-          var processedData = [];
-  
-          rawData.forEach(function (data) {
-            if (excludes.hasOwnProperty('pokemon_species')) {
-              excludes.pokemon_species.forEach(function (name) {
-                data[name] = undefined;
-              });
-            }
+        console.log('Processing pokemon species data');
 
-            processedData.push(util.flattenData(data));
-          });
-  
-          resolve(processedData);
-        });
+        return Promise.resolve(postProcessData(type, rawData));
       }
     }
   };
@@ -19566,32 +19629,54 @@ var Popover = (function ($) {
   /**
    * Helper function to grab all the data for a specific set.
    *
-   * @param {Object} settings
-   *   The settings used for our API payload.
+   * @param string type
+   *   The type used for our API payload.
    */
-  function getAllData(settings) {
+  function getAllData(type) {
     return new Promise(function (resolve, reject) {
-      var rawData = [];
+      var rawData = [],
+          url = baseUrl + type;
 
       reject = function reject(reason) {
         // Try and resolve.
         resolve(rawData);
       };
 
-      getData(settings, function getNextData (data) {
+      // Append query params.
+      url = util.appendQueryParam(url, 'limit', settings.limit);
+      url = util.appendQueryParam(url, 'offset', settings.offset[type]);
+
+      getData(url, function getNextData (data) {
         var hasMoreData = data.next || false,
+            count = data.count,
+            current,
             promises = prefetchApiUrls(data.results);
         
         Promise.all(promises).then(function (items) {
+          current = items[items.length - 1];
           totalRecords = totalRecords + items.length;
           rawData = rawData.concat(items);
 
-          if (hasMoreData && totalRecords < maxLimit) {
-            settings = { "url": data.next };
-            getData(settings, getNextData, reject);
+          if (hasMoreData && totalRecords < settings.maxLimit) {
+            getData(data.next, getNextData, reject);
           }
           else {
-            resolve(rawData);
+            if (caching) {
+              // Update the offset.
+              if (current.id >= count) {
+                settings.offset[type] = 0;
+              }
+              else {
+                settings.offset[type] = current.id;
+              }
+              
+              saveAllData('/cache/data/' + type, rawData).then(function () {
+                resolve(rawData);
+              });
+            }
+            else {
+              resolve(rawData);
+            }  
           }
         }, reject);
       }, reject);
@@ -19599,9 +19684,9 @@ var Popover = (function ($) {
   }
 
   /**
-   * AJAX call to our API.
+   * AJAX call our API/cache.
    *
-   * @param {Object} settings
+   * @param {string} url
    *   The url used for our API payload.
    * @param {function(data)} successCallback
    *   A callback function which takes one argument:
@@ -19610,17 +19695,7 @@ var Popover = (function ($) {
    *   A callback which takes one argument:
    *     reason: A string describing why data collection failed.
    */
-  function getData(settings, successCallback, failCallback) {
-    var url = settings.url;
-
-    if (settings.hasOwnProperty('limit')) {
-      url = util.appendQueryParam(url, 'limit', settings.limit);
-    }
-
-    if (settings.hasOwnProperty('offset')) {
-      url = util.appendQueryParam(url, 'offset', settings.offset);
-    }
-    
+  function getData(url, successCallback, failCallback) {
     $.ajax({
       url: url,
       method: "GET",
@@ -19635,18 +19710,135 @@ var Popover = (function ($) {
           if (retriesAttempted < maxRetries) {
             retriesAttempted++;
 
-            // Wait up to 2 minutes before making another API call.
+            // Wait 5 seconds before making another API call.
             setTimeout(function(){
-              getData(settings, successCallback, failCallback);
-            }, 2000);
+              getData(url, successCallback, failCallback);
+            }, 5000);
           }
           else {
             failCallback('Too many requests, try an incremental refresh later.');
           }
         }
         else {
-          failCallback('JSON fetch failed for ' + settings.url + '.');
+          console.log(xhr);
+          failCallback('JSON fetch failed for ' + url + '.');
         }
+      }
+    });
+  }
+
+  /**
+   * Helper function to post process the data to make it ready for Tableau.
+   * 
+   * @param type
+   * @param rawData
+   * @returns {Promise}
+   */
+  function postProcessData(type, rawData) {
+    var processData,
+        processedData = [],
+        getCachedData,
+        promise;
+
+    // Flatten data structure.
+    processData = function (data) {
+      promise = new Promise(function (resolve, reject) {
+        data.forEach(function (data) {
+          if (excludes.hasOwnProperty(type)) {
+            excludes[type].forEach(function (name) {
+              data[name] = undefined;
+            });
+          }
+
+          processedData.push(util.flattenData(data));
+        });
+
+        resolve(processedData);
+      });
+
+      return promise;
+    };
+
+    // Get our cached data.
+    getCachedData = function () {
+      promise = new Promise(function (resolve, reject) {
+        getData('/cache/data/' + type, function (result) {
+          resolve(result);
+        }, function (reason) {
+          reject(reason);
+        });
+      });
+      return promise;
+    };
+    
+    if (caching) {
+      return getCachedData().then(processData);
+    }
+    else {
+      return Promise.resolve(processData);
+    }
+  }
+
+  /**
+   * Helper function to return an array of promises
+   *
+   * @param {string} url
+   *   Url of the API to save to.
+   * @param {array} records
+   *   Array of data objects.
+   *
+   * @returns {[]}
+   *   An array of promise objects, set to resolve or reject after attempting to
+   *   save API data.
+   */
+  function saveAllData(url, records) {
+    var data,
+        promise,
+        promises = [];
+
+    for (var i = 0; i < records.length; i++) {
+      data = records[i];
+      
+      promise = new Promise(function (resolve, reject) {
+        saveData(url, data, function (result) {
+          resolve(result);
+        }, function (reason) {
+          reject(reason);
+        });
+      });
+
+      promises.push(promise);
+    }
+    
+    return Promise.all(promises);
+  }
+
+  /**
+   * AJAX call our API/cache.
+   *
+   * @param {string} url
+   *   The url used for our API payload.
+   * @param {object} data
+   *   The data to save in our cache.
+   * @param {function(data)} successCallback
+   *   A callback function which takes one argument:
+   *     data: result set from the API call.
+   * @param {function(reason)} failCallback
+   *   A callback which takes one argument:
+   *     reason: A string describing why data collection failed.
+   */
+  function saveData(url, data, successCallback, failCallback) {
+    $.ajax({
+      url: url,
+      method: "PUT",
+      contentType: "application/json",
+      data: JSON.stringify(data),
+      success: function (response) {
+        console.log('Saved data for: ' + url);
+        successCallback(response);
+      },
+      error: function (xhr, status, error) {
+        failCallback('Save failed for ' + url + '.');
       }
     });
   }
@@ -19664,19 +19856,14 @@ var Popover = (function ($) {
   function prefetchApiUrls(results) {
     var promise,
         promises = [],
-        result = {},
-        settings = {};
+        result = {};
 
     for (var i = 0; i < results.length; i++) {
       result = results[i];
 
       if (result.hasOwnProperty('url')) {
         promise = new Promise(function (resolve, reject) {
-          settings = {
-            'url': result.url
-          };
-
-          getData(settings, function (data) {
+          getData(result.url, function (data) {
             resolve(data);
           }, function (reason) {
             reject(reason);

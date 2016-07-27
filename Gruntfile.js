@@ -29,15 +29,16 @@ module.exports = function(grunt) {
           'bower_components/tether/dist/js/tether.js',
           'bower_components/bootstrap/dist/js/bootstrap.js',
           'bower_components/wdcw/dist/wdcw.min.js',
-          'src/**/*.js'
+          'src/public/*.js'
         ],
-        dest: 'build/js/all.js'
+        dest: 'src/public/build/js/all.js'
       },
       css: {
         src: [
-          'bower_components/bootstrap/dist/css/bootstrap.css'
+          'bower_components/bootstrap/dist/css/bootstrap.css',
+          'src/public/*.css'
         ],
-        dest: 'build/css/style.css'
+        dest: 'src/public/build/css/style.css'
       }
     },
     uglify: {
@@ -47,22 +48,22 @@ module.exports = function(grunt) {
         sourceMap: true
       },
       target: {
-        src: 'build/js/all.js',
-        dest: 'build/js/all.min.js'
+        src: 'src/public/build/js/all.js',
+        dest: 'src/public/build/js/all.min.js'
       }
     },
     cssmin: {
       target: {
         files: [{
-          src: 'build/css/style.css',
-          dest: 'build/css/style.min.css'
+          src: 'src/public/build/css/style.css',
+          dest: 'src/public/build/css/style.min.css'
         }]
       }
     },
-    connect: {
+    express: {
       server: {
         options: {
-          base: './',
+          script: 'src/app.js',
           port: 9001
         }
       }
@@ -80,7 +81,7 @@ module.exports = function(grunt) {
   });
 
   grunt.loadNpmTasks('grunt-contrib-concat');
-  grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-express-server');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -92,7 +93,7 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('run', [
-    'connect:server',
+    'express:server',
     'watch'
   ]);
 

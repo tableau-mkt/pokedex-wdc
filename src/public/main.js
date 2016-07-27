@@ -2,12 +2,20 @@ var wdcw = window.wdcw || {};
 
 (function($, Q, tableau) {
   var excludes,
+      baseUrl = "http://pokeapi.co/api/v2/",
+      caching = true,
       retriesAttempted = 0,
       totalRecords = 0,
-      defaultLimit = 60,
-      defaultOffset = 0,
-      maxRetries = 5,
-      maxLimit = 5000,
+      settings = {
+        'maxRetries': 2,
+        'maxLimit': 180,
+        'limit': 60,
+        'offset': {
+          'generation': 0,
+          'pokemon': 0,
+          'pokemon-species': 0
+        }
+      },
       pokedex = {},
       wdc;
 
@@ -20,9 +28,9 @@ var wdcw = window.wdcw || {};
    * @type {{schema_name: string[property_name_1, property_name_2]}}
    */
   excludes = {
-    "games_generation": ["pokemon_species", "types", "version_groups", "names"],
+    "generation": ["pokemon_species", "types", "version_groups", "names"],
     "pokemon": ["forms", "abilities", "moves", "held_items", "game_indices"],
-    "pokemon_species": ["form_descriptions", "flavor_text_entries", "names", "varieties", "evolution_chain", "genera", "pal_park_encounters"]
+    "pokemon-species": ["form_descriptions", "flavor_text_entries", "names", "varieties", "evolution_chain", "genera", "pal_park_encounters"]
   };
   
   /**
@@ -45,6 +53,7 @@ var wdcw = window.wdcw || {};
    */
   pokedex.setup = function setup(phase) {
     switch (phase) {
+      
       case tableau.phaseEnum.interactivePhase:
         // Perform actual interactive phase stuff.
         break;
@@ -53,6 +62,31 @@ var wdcw = window.wdcw || {};
         // Perform set up tasks that should happen when Tableau is attempting to
         // retrieve data from your connector (the user is not prompted for any
         // information in this phase.
+
+        // If caching is enabled, grab the default settings.
+        if (caching) {
+          return new Promise(function(resolve, reject) {
+            getData('/cache/settings', 
+              function (result) {
+                if (typeof(result[0]) === 'object' && result[0].hasOwnProperty('settings')) {
+                  result = result[0].settings;
+                }
+
+                // Update the offset variables.
+                for (var name in result) {
+                  if (result.hasOwnProperty(name)) {
+                    settings.offset[name] = result[name];
+                  }
+                }
+                
+                resolve(Promise.resolve());
+              },
+              function (err) {
+                console.log(err);
+              }
+            );
+          });
+        }
         break;
 
       case tableau.phaseEnum.authPhase:
@@ -79,6 +113,21 @@ var wdcw = window.wdcw || {};
   pokedex.teardown = function teardown() {
     // Once shutdown tasks are complete, call this. Particularly useful if your
     // clean-up tasks are asynchronous in nature.
+
+    // If caching is enabled, save our settings.
+    if (caching) {
+      return new Promise(function(resolve, reject) {
+        saveData('/cache/settings/1', settings.offset,
+          function (result) {
+            resolve(Promise.resolve());
+          },
+          function (err) {
+            console.log(err);
+          }
+        );
+      });
+    }
+    
     return Promise.resolve();
   };
 
@@ -110,9 +159,9 @@ var wdcw = window.wdcw || {};
    */
   pokedex.schema = function defineSchema() {
     return Promise.all([
-      Q($.getJSON('/src/schema/games_generation.json')),
-      Q($.getJSON('/src/schema/pokemon.json')),
-      Q($.getJSON('/src/schema/pokemon_species.json'))
+      Q($.getJSON('/schema/generation.json')),
+      Q($.getJSON('/schema/pokemon.json')),
+      Q($.getJSON('/schema/pokemon_species.json'))
     ]);
   };
 
@@ -136,19 +185,16 @@ var wdcw = window.wdcw || {};
    *   triggered.
    */
   pokedex.tables = {
-    games_generation: {
+    generation: {
       getData: function getPokemonData(lastRecord) {
-        var settings = {
-          "url": "http://pokeapi.co/api/v2/generation/",
-          "limit": defaultLimit,
-          "offset": defaultOffset
-        };
-
+        var type = "generation";
+        
+        // Support incremental refreshing.
         if (lastRecord) {
-          settings.offset = Number(lastRecord) + 1;
+          settings.offset[type] = Number(lastRecord) + 1;
         }
 
-        return Promise.resolve(getAllData(settings));
+        return Promise.resolve(getAllData(type));
       },
       /**
        * Transform games generation data into the format expected for the generation table.
@@ -159,38 +205,22 @@ var wdcw = window.wdcw || {};
        * @returns {Promise.<Array<any>>}
        */
       postProcess: function postProcessGamesGenerationData(rawData) {
+        var type = "generation";
+        
         console.log('Processing games generation data');
 
-        return new Promise(function (resolve, reject) {
-          var processedData = [];
-
-          rawData.forEach(function (data) {
-            if (excludes.hasOwnProperty('games_generation')) {
-              excludes.games_generation.forEach(function (name) {
-                data[name] = undefined;
-              });
-            }
-
-            processedData.push(util.flattenData(data));
-          });
-
-          resolve(processedData);
-        });
+        return Promise.resolve(postProcessData(type, rawData));
       }
     },
     pokemon: {
       getData: function getPokemonData(lastRecord) {
-        var settings = {
-          "url": "http://pokeapi.co/api/v2/pokemon/",
-          "limit": defaultLimit,
-          "offset": defaultOffset
-        };
-
+        var type = "pokemon";
+        
         if (lastRecord) {
-          settings.offset = Number(lastRecord) + 1;
+          settings.offset[type] = Number(lastRecord) + 1;
         }
 
-        return Promise.resolve(getAllData(settings));
+        return Promise.resolve(getAllData(type));
       },
       /**
        * Transform pokemon data into the format expected for the pokemon table.
@@ -201,38 +231,22 @@ var wdcw = window.wdcw || {};
        * @returns {Promise.<Array<any>>}
        */
       postProcess: function postProcessPokemonData(rawData) {
-        console.log('Processing pokemon data');
+        var type = "pokemon";
         
-        return new Promise(function (resolve, reject) {
-          var processedData = [];
-          
-          rawData.forEach(function (data) {
-            if (excludes.hasOwnProperty('pokemon')) {
-              excludes.pokemon.forEach(function (name) {
-                data[name] = undefined;
-              });
-            }
-            
-            processedData.push(util.flattenData(data));
-          });
-          
-          resolve(processedData);
-        });
+        console.log('Processing pokemon data');
+
+        return Promise.resolve(postProcessData(type, rawData));
       }
     },
-    pokemon_species: {
+    "pokemon-species": {
       getData: function getPokemonSpeciesData(lastRecord) {
-        var settings = {
-          "url": "http://pokeapi.co/api/v2/pokemon-species/",
-          "limit": defaultLimit,
-          "offset": defaultOffset
-        };
-
+        var type = "species";
+        
         if (lastRecord) {
-          settings.offset = Number(lastRecord) + 1;
+          settings.offset[type] = Number(lastRecord) + 1;
         }
 
-        return Promise.resolve(getAllData(settings));
+        return Promise.resolve(getAllData(type));
       },
       /**
        * Transform pokemon species data into the format expected for the pokemon species table.
@@ -243,23 +257,11 @@ var wdcw = window.wdcw || {};
        * @returns {Promise.<Array<any>>}
        */
       postProcess: function postProcessPokemonSpeciesData(rawData) {
-        console.log('Processing pokemon species data');
+        var type = "species";
         
-        return new Promise(function (resolve, reject) {
-          var processedData = [];
-  
-          rawData.forEach(function (data) {
-            if (excludes.hasOwnProperty('pokemon_species')) {
-              excludes.pokemon_species.forEach(function (name) {
-                data[name] = undefined;
-              });
-            }
+        console.log('Processing pokemon species data');
 
-            processedData.push(util.flattenData(data));
-          });
-  
-          resolve(processedData);
-        });
+        return Promise.resolve(postProcessData(type, rawData));
       }
     }
   };
@@ -268,32 +270,54 @@ var wdcw = window.wdcw || {};
   /**
    * Helper function to grab all the data for a specific set.
    *
-   * @param {Object} settings
-   *   The settings used for our API payload.
+   * @param string type
+   *   The type used for our API payload.
    */
-  function getAllData(settings) {
+  function getAllData(type) {
     return new Promise(function (resolve, reject) {
-      var rawData = [];
+      var rawData = [],
+          url = baseUrl + type;
 
       reject = function reject(reason) {
         // Try and resolve.
         resolve(rawData);
       };
 
-      getData(settings, function getNextData (data) {
+      // Append query params.
+      url = util.appendQueryParam(url, 'limit', settings.limit);
+      url = util.appendQueryParam(url, 'offset', settings.offset[type]);
+
+      getData(url, function getNextData (data) {
         var hasMoreData = data.next || false,
+            count = data.count,
+            current,
             promises = prefetchApiUrls(data.results);
         
         Promise.all(promises).then(function (items) {
+          current = items[items.length - 1];
           totalRecords = totalRecords + items.length;
           rawData = rawData.concat(items);
 
-          if (hasMoreData && totalRecords < maxLimit) {
-            settings = { "url": data.next };
-            getData(settings, getNextData, reject);
+          if (hasMoreData && totalRecords < settings.maxLimit) {
+            getData(data.next, getNextData, reject);
           }
           else {
-            resolve(rawData);
+            if (caching) {
+              // Update the offset.
+              if (current.id >= count) {
+                settings.offset[type] = 0;
+              }
+              else {
+                settings.offset[type] = current.id;
+              }
+              
+              saveAllData('/cache/data/' + type, rawData).then(function () {
+                resolve(rawData);
+              });
+            }
+            else {
+              resolve(rawData);
+            }  
           }
         }, reject);
       }, reject);
@@ -301,9 +325,9 @@ var wdcw = window.wdcw || {};
   }
 
   /**
-   * AJAX call to our API.
+   * AJAX call our API/cache.
    *
-   * @param {Object} settings
+   * @param {string} url
    *   The url used for our API payload.
    * @param {function(data)} successCallback
    *   A callback function which takes one argument:
@@ -312,17 +336,7 @@ var wdcw = window.wdcw || {};
    *   A callback which takes one argument:
    *     reason: A string describing why data collection failed.
    */
-  function getData(settings, successCallback, failCallback) {
-    var url = settings.url;
-
-    if (settings.hasOwnProperty('limit')) {
-      url = util.appendQueryParam(url, 'limit', settings.limit);
-    }
-
-    if (settings.hasOwnProperty('offset')) {
-      url = util.appendQueryParam(url, 'offset', settings.offset);
-    }
-    
+  function getData(url, successCallback, failCallback) {
     $.ajax({
       url: url,
       method: "GET",
@@ -337,18 +351,135 @@ var wdcw = window.wdcw || {};
           if (retriesAttempted < maxRetries) {
             retriesAttempted++;
 
-            // Wait up to 2 minutes before making another API call.
+            // Wait 5 seconds before making another API call.
             setTimeout(function(){
-              getData(settings, successCallback, failCallback);
-            }, 2000);
+              getData(url, successCallback, failCallback);
+            }, 5000);
           }
           else {
             failCallback('Too many requests, try an incremental refresh later.');
           }
         }
         else {
-          failCallback('JSON fetch failed for ' + settings.url + '.');
+          console.log(xhr);
+          failCallback('JSON fetch failed for ' + url + '.');
         }
+      }
+    });
+  }
+
+  /**
+   * Helper function to post process the data to make it ready for Tableau.
+   * 
+   * @param type
+   * @param rawData
+   * @returns {Promise}
+   */
+  function postProcessData(type, rawData) {
+    var processData,
+        processedData = [],
+        getCachedData,
+        promise;
+
+    // Flatten data structure.
+    processData = function (data) {
+      promise = new Promise(function (resolve, reject) {
+        data.forEach(function (data) {
+          if (excludes.hasOwnProperty(type)) {
+            excludes[type].forEach(function (name) {
+              data[name] = undefined;
+            });
+          }
+
+          processedData.push(util.flattenData(data));
+        });
+
+        resolve(processedData);
+      });
+
+      return promise;
+    };
+
+    // Get our cached data.
+    getCachedData = function () {
+      promise = new Promise(function (resolve, reject) {
+        getData('/cache/data/' + type, function (result) {
+          resolve(result);
+        }, function (reason) {
+          reject(reason);
+        });
+      });
+      return promise;
+    };
+    
+    if (caching) {
+      return getCachedData().then(processData);
+    }
+    else {
+      return Promise.resolve(processData);
+    }
+  }
+
+  /**
+   * Helper function to return an array of promises
+   *
+   * @param {string} url
+   *   Url of the API to save to.
+   * @param {array} records
+   *   Array of data objects.
+   *
+   * @returns {[]}
+   *   An array of promise objects, set to resolve or reject after attempting to
+   *   save API data.
+   */
+  function saveAllData(url, records) {
+    var data,
+        promise,
+        promises = [];
+
+    for (var i = 0; i < records.length; i++) {
+      data = records[i];
+      
+      promise = new Promise(function (resolve, reject) {
+        saveData(url, data, function (result) {
+          resolve(result);
+        }, function (reason) {
+          reject(reason);
+        });
+      });
+
+      promises.push(promise);
+    }
+    
+    return Promise.all(promises);
+  }
+
+  /**
+   * AJAX call our API/cache.
+   *
+   * @param {string} url
+   *   The url used for our API payload.
+   * @param {object} data
+   *   The data to save in our cache.
+   * @param {function(data)} successCallback
+   *   A callback function which takes one argument:
+   *     data: result set from the API call.
+   * @param {function(reason)} failCallback
+   *   A callback which takes one argument:
+   *     reason: A string describing why data collection failed.
+   */
+  function saveData(url, data, successCallback, failCallback) {
+    $.ajax({
+      url: url,
+      method: "PUT",
+      contentType: "application/json",
+      data: JSON.stringify(data),
+      success: function (response) {
+        console.log('Saved data for: ' + url);
+        successCallback(response);
+      },
+      error: function (xhr, status, error) {
+        failCallback('Save failed for ' + url + '.');
       }
     });
   }
@@ -366,19 +497,14 @@ var wdcw = window.wdcw || {};
   function prefetchApiUrls(results) {
     var promise,
         promises = [],
-        result = {},
-        settings = {};
+        result = {};
 
     for (var i = 0; i < results.length; i++) {
       result = results[i];
 
       if (result.hasOwnProperty('url')) {
         promise = new Promise(function (resolve, reject) {
-          settings = {
-            'url': result.url
-          };
-
-          getData(settings, function (data) {
+          getData(result.url, function (data) {
             resolve(data);
           }, function (reason) {
             reject(reason);
