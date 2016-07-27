@@ -2,7 +2,7 @@ var wdcw = window.wdcw || {};
 
 (function($, Q, tableau) {
   var excludes,
-      baseUrl = "http://pokeapi.co/api/v2/",
+      baseUrl = "https://pokeapi.co/api/v2/",
       caching = true,
       retriesAttempted = 0,
       totalRecords = 0,
